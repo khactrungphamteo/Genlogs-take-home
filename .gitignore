@@ -1,0 +1,28 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Env files
+.env
+
+# Editor / OS
+.idea/
+.DS_Store
+
+# Local git worktrees
+.trees/
+02-system-architecture.md
+03-data-model.md
+.claude/commands/implement_feature.md
+GenLogs take home test.docx
+Flow Diagram.drawio
+System Architecture.drawio
+docs/deployment-runbook.md

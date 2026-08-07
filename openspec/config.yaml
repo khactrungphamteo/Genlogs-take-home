@@ -1,0 +1,47 @@
+schema: spec-driven
+
+context: |
+  Product: GenLogs — a platform that observes commercial trucks from roadside
+  highway cameras and answers one question through a web portal:
+  "For a given origin and destination city, which carriers move the most trucks?"
+
+  Authoritative design docs live at the repo root and outrank any assumption:
+    - 02-system-architecture.md (components, design decisions DD-1..DD-9, NFRs)
+    - 03-data-model.md (revision v2 — GCS / Pub/Sub / Cloud SQL storage tiering)
+    - CLAUDE.md (condensed, implementation-facing summary of both)
+  Where the two docs disagree on storage technology, 03-data-model.md v2 wins.
+
+  Scope of anything built in this repo today: the lane-query read path only —
+  a FastAPI Query API plus a React portal, backed by in-memory mock data.
+  Edge inference, GCS/Pub-Sub ingest, the matching worker, the carrier sync job
+  and the nightly rollup job are designed-only. There is no database.
+
+  Tech stack:
+    - Backend: Python 3.11+, FastAPI, Pydantic v2, uvicorn, pytest (apps/api)
+    - Frontend: React 18 + TypeScript + Vite (apps/portal)
+    - Google Maps JavaScript API (Places Autocomplete + DirectionsService)
+
+  Conventions:
+    - Design decisions DD-1..DD-9 in 02-system-architecture.md are load-bearing.
+      DD-6 (reads never scan raw sightings — only precomputed lane rollups) and
+      DD-9 (every lane response carries coverage metadata so "no trucks" and
+      "no cameras" are never confused) must survive into the mock implementation.
+    - Mock data is shaped like the `lane_daily` rollup it stands in for, so the
+      API contract does not change when a real database is put behind it.
+    - Never invent schema. Reuse the field names from 03-data-model.md.
+
+rules:
+  proposal:
+    - State which design decisions (DD-n) the change touches and how it honours them
+    - Include a "Non-goals" section naming the designed-only components left out
+  specs:
+    - Requirements are written from the portal user's or API consumer's point of view
+    - Every requirement carries at least one scenario, including the empty/unknown case
+  tasks:
+    - Group tasks by deliverable (API, portal, docs) and keep each task independently verifiable
+
+operations:
+  apply:
+    guidance:
+      - Keep mock data in one module so it reads as a stand-in for `lane_daily`
+      - The app must run with no Google Maps API key present (degrade, do not crash)

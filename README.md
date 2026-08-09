@@ -144,3 +144,68 @@ Changes to this repo are proposed and applied through
 for the proposals (`add-lane-query-demo`, `add-cloud-run-deployment`) that
 produced the current demo, each with a `proposal.md`, `design.md`, `tasks.md`,
 and delta spec.
+
+## Prompts and rules used in this project
+
+This repo was built with an AI coding assistant driven through the OpenSpec
+workflow below, rather than free-form prompting. Every change went through the
+same slash-commands, against the same set of rules, so the artifacts stay
+consistent across changes.
+
+### Workflow prompts (`.claude/commands/opsx`)
+
+| Command | Purpose |
+|---|---|
+| `/opsx:explore` | Thinking-only mode — investigate the codebase and design docs, clarify requirements. Never writes code. |
+| `/opsx:propose` | Create a new change and generate all of its artifacts (`proposal.md`, `design.md`, `specs/<capability>/spec.md`, `tasks.md`) in one step. |
+| `/opsx:update` | Revise an existing change's planning artifacts and keep them coherent with each other. Never edits code. |
+| `/opsx:apply` | Implement the tasks in an approved change's `tasks.md` against the actual codebase. |
+| `/opsx:sync` | Merge a change's delta specs into the main `openspec/specs/` tree without archiving. |
+| `/opsx:archive` | Archive a change once its implementation is complete and merged into main specs. |
+
+Each command's full instructions live alongside it in
+[.claude/commands/opsx](.claude/commands/opsx) (and as reusable skills in
+[.claude/skills](.claude/skills)). Both `add-lane-query-demo` and
+`add-cloud-run-deployment` were produced by `/opsx:propose` followed by
+`/opsx:apply`.
+
+### Rules the assistant had to follow (`openspec/config.yaml`)
+
+Every proposal, spec, and task list generated in this repo is checked against
+the same rules, defined once in [openspec/config.yaml](openspec/config.yaml):
+
+- **Proposals** must state which numbered design decisions (DD-n, see below)
+  the change touches and how it honors them, and must include a "Non-goals"
+  section naming any designed-only components the change deliberately leaves
+  out.
+- **Specs** must be written from the portal user's or API consumer's point of
+  view, and every requirement must carry at least one scenario, including the
+  empty/unknown case (e.g. an unmonitored lane).
+- **Tasks** must be grouped by deliverable (API, portal, docs) and each task
+  must be independently verifiable.
+- Mock data must stay shaped like the `lane_daily` rollup it stands in for, so
+  the API contract doesn't change when a real database replaces it, and the
+  app must run with no Google Maps API key present (degrade, never crash).
+
+### Design rules the code must not violate (`CLAUDE.md`, DD-1..DD-9)
+
+Independent of the OpenSpec workflow, every change is also checked against the
+nine load-bearing design decisions from
+[02-system-architecture.md](02-system-architecture.md) — condensed in
+[CLAUDE.md](CLAUDE.md#design-decisions-that-must-not-be-casually-violated):
+
+| # | Rule (condensed) |
+|---|---|
+| DD-1 | Detection/OCR/classification run on the camera, never centrally. |
+| DD-2 | Private-vehicle frames are discarded on the device; windows blurred before transmission. |
+| DD-3 | Ingest and matching are decoupled by a queue (Pub/Sub). |
+| DD-4 | Raw images and detection JSON are immutable and kept indefinitely (GCS Bucket Lock). |
+| DD-5 | FMCSA/SAFER is a locally cached dimension (`carrier`, SCD-2), never a live per-sighting call. |
+| DD-6 | Reads never scan raw sightings — only the precomputed `lane_daily` rollup. |
+| DD-7 | Match precision over recall — below-threshold matches are quarantined, never guessed. |
+| DD-8 | One Cloud SQL instance holds only resolved/derived data — no images, no raw detection JSON. |
+| DD-9 | Every lane query response carries coverage metadata, so "no trucks" and "no cameras" are never confused. |
+
+Both change proposals explicitly record which of these they honor and which
+they defer — see each proposal's "Impact" and "Non-goals" sections in
+[openspec/changes](openspec/changes).

@@ -187,25 +187,3 @@ the same rules, defined once in [openspec/config.yaml](openspec/config.yaml):
   the API contract doesn't change when a real database replaces it, and the
   app must run with no Google Maps API key present (degrade, never crash).
 
-### Design rules the code must not violate (`CLAUDE.md`, DD-1..DD-9)
-
-Independent of the OpenSpec workflow, every change is also checked against the
-nine load-bearing design decisions from
-[02-system-architecture.md](02-system-architecture.md) — condensed in
-[CLAUDE.md](CLAUDE.md#design-decisions-that-must-not-be-casually-violated):
-
-| # | Rule (condensed) |
-|---|---|
-| DD-1 | Detection/OCR/classification run on the camera, never centrally. |
-| DD-2 | Private-vehicle frames are discarded on the device; windows blurred before transmission. |
-| DD-3 | Ingest and matching are decoupled by a queue (Pub/Sub). |
-| DD-4 | Raw images and detection JSON are immutable and kept indefinitely (GCS Bucket Lock). |
-| DD-5 | FMCSA/SAFER is a locally cached dimension (`carrier`, SCD-2), never a live per-sighting call. |
-| DD-6 | Reads never scan raw sightings — only the precomputed `lane_daily` rollup. |
-| DD-7 | Match precision over recall — below-threshold matches are quarantined, never guessed. |
-| DD-8 | One Cloud SQL instance holds only resolved/derived data — no images, no raw detection JSON. |
-| DD-9 | Every lane query response carries coverage metadata, so "no trucks" and "no cameras" are never confused. |
-
-Both change proposals explicitly record which of these they honor and which
-they defer — see each proposal's "Impact" and "Non-goals" sections in
-[openspec/changes](openspec/changes).

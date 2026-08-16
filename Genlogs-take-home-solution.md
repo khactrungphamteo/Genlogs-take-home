@@ -4,7 +4,13 @@
 
 ```mermaid
 graph LR
-    CAP[Capture high-resoluation<br/>image]
+    subgraph EDGE["Edge Tier"]
+        CAM[Capture high-resolution<br/>image]
+        OCR[Edge OCR + Detection]
+        GCS[(Raw image in GCS)]
+        EVT[Structured event JSON]
+    end
+
     ING[Ingest API]
     Q[Event Queue]
     MATCH[Carrier Matching API]
@@ -14,7 +20,10 @@ graph LR
     API[Query API<br/>FastAPI]
     PORTAL[React Portal]
 
-    CAP --> ING --> Q --> MATCH
+    CAM --> OCR
+    OCR --> GCS
+    OCR --> EVT
+    EVT --> ING --> Q --> MATCH
     FMCSA --> MATCH
     MATCH --> STORE --> ROLL --> API --> PORTAL
 ```

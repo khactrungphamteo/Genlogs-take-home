@@ -137,6 +137,8 @@ graph LR
 ```mermaid
 erDiagram
   CAMERA_SITE ||--o{ SIGHTING : observed_by
+  CAMERA_SITE ||--o{ SIGHTING_QUARANTINE : observed_by
+  SIGHTING_QUARANTINE |o--o| SIGHTING : promotes_to
   CARRIER ||--o{ SIGHTING : attributed_to
   SIGHTING }o--o| TRIP : belongs_to
   CARRIER ||--o{ TRIP : operated_by
@@ -144,22 +146,21 @@ erDiagram
   METRO_AREA ||--o{ TRIP : endpoint_of
   METRO_AREA ||--o{ LANE_DAILY : endpoint_of
   METRO_AREA ||--o{ LANE_COVERAGE : endpoint_of
-
   CARRIER {
     bigint carrier_sk PK
     text usdot_number
     text legal_name
-    timestamp valid_from
-    timestamp valid_to
+    timestamptz valid_from
+    timestamptz valid_to
     boolean is_current
-    timestamp fmcsa_last_synced_at
+    timestamptz fmcsa_last_synced_at
   }
   SIGHTING {
     uuid sighting_id PK
     text event_id UK
     uuid camera_id FK
     bigint carrier_sk FK
-    timestamp observed_at
+    timestamptz observed_at
     text image_uri
     text usdot_number
     numeric match_confidence
@@ -180,6 +181,16 @@ erDiagram
     date day PK
     int trip_count
     int distinct_trucks
+  }
+  SIGHTING_QUARANTINE {
+    uuid quarantine_id PK
+    text event_id UK
+    uuid camera_id FK
+    text quarantine_reason
+    text best_candidate
+    numeric best_confidence
+    text review_status
+    uuid promoted_sighting_id FK
   }
   CAMERA_SITE {
     uuid camera_id PK
